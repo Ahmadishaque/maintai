@@ -1,0 +1,44 @@
+[
+  {
+    "id": "POL-MECH-001",
+    "title": "Rotating equipment vibration or fluid leak",
+    "keywords": ["pump", "motor", "fan", "bearing", "vibration", "grinding", "seal", "leak", "fluid"],
+    "procedure": "Keep personnel clear of moving parts. Do not touch or open the equipment. Record visible leakage, noise, vibration, and asset location. Request an urgent mechanical inspection. Isolate the equipment only when the reporter is trained and local lockout procedures permit it.",
+    "escalation": "Escalate immediately when vibration is severe, fluid is unidentified, a guard is damaged, or the equipment cannot be safely isolated."
+  },
+  {
+    "id": "POL-HVAC-002",
+    "title": "HVAC noise, loss of cooling, or condensate leak",
+    "keywords": ["hvac", "air conditioner", "air-conditioning", "cooling", "vent", "compressor", "condensate", "water", "grinding", "noise"],
+    "procedure": "Record the unit location, affected area, noise, visible water, odor, and whether cooling is lost. Keep water away from electrical equipment and restrict access to slippery areas. Route the request to HVAC maintenance.",
+    "escalation": "Escalate when water is near electrical components, there is smoke or burning odor, occupants are at risk, or a critical room loses environmental control."
+  },
+  {
+    "id": "POL-ELEC-003",
+    "title": "Electrical fault, heat, smoke, or burning odor",
+    "keywords": ["electrical", "outlet", "panel", "wire", "spark", "smoke", "burning", "heat", "breaker", "power"],
+    "procedure": "Do not touch exposed wiring or energized equipment. Keep people away from the area and record the asset and location. Contact qualified electrical maintenance. Do not reset breakers repeatedly.",
+    "escalation": "Treat active sparking, smoke, fire, exposed conductors, or a strong burning odor as an emergency and contact site emergency personnel."
+  },
+  {
+    "id": "POL-PLUMB-004",
+    "title": "Water leak, pipe failure, or flooding",
+    "keywords": ["pipe", "plumbing", "water", "leak", "flood", "drain", "toilet", "sink", "ceiling"],
+    "procedure": "Document the source and affected area, protect people from slip hazards, and move sensitive equipment only when safe. Route the request to plumbing maintenance. Use an approved shutoff only when trained and authorized.",
+    "escalation": "Escalate rapidly for uncontrolled flow, contaminated water, ceiling collapse risk, or water near electrical equipment."
+  },
+  {
+    "id": "POL-SAFE-005",
+    "title": "Unknown substance, strong odor, or potential exposure",
+    "keywords": ["unknown", "chemical", "odor", "smell", "dark fluid", "spill", "exposure", "irritation", "gas"],
+    "procedure": "Do not touch, smell closely, or attempt to clean an unidentified substance. Restrict access, record visible characteristics from a safe distance, and contact the site safety team for identification and handling instructions.",
+    "escalation": "Escalate immediately for symptoms of exposure, a spreading spill, vapor, fire risk, or an unknown material near drains or occupied areas."
+  },
+  {
+    "id": "POL-GEN-006",
+    "title": "General maintenance intake and human review",
+    "keywords": ["broken", "damaged", "issue", "problem", "maintenance", "repair"],
+    "procedure": "Capture the asset, exact location, observed symptoms, start time, operational impact, and photographs when safe. Assign the request to the appropriate maintenance group. Avoid making a technical diagnosis without supporting evidence.",
+    "escalation": "Request human review when the asset, hazard, or applicable procedure is uncertain, or when required information is missing."
+  }
+]
