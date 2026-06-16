@@ -1,5 +1,8 @@
+from collections.abc import Generator
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
 
@@ -10,6 +13,16 @@ def create_database_engine() -> Engine:
 
 
 engine = create_database_engine()
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
+
+def get_db() -> Generator[Session, None, None]:
+    """Provide a database session for one API request."""
+    database = SessionLocal()
+    try:
+        yield database
+    finally:
+        database.close()
 
 
 def check_database_connection() -> bool:
