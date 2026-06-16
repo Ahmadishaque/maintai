@@ -6,7 +6,10 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.maintenance_request import MaintenanceRequest
-from app.schemas.maintenance_request import MaintenanceRequestCreate, MaintenanceRequestRead
+from app.schemas.maintenance_request import (
+    MaintenanceRequestCreate,
+    MaintenanceRequestRead,
+)
 
 router = APIRouter(prefix="/api/v1/requests", tags=["maintenance requests"])
 DatabaseSession = Annotated[Session, Depends(get_db)]
@@ -35,5 +38,9 @@ def list_maintenance_requests(
     limit: Annotated[int, Query(ge=1, le=100)] = 25,
 ) -> list[MaintenanceRequest]:
     """Return the most recent maintenance requests."""
-    statement = select(MaintenanceRequest).order_by(MaintenanceRequest.created_at.desc()).limit(limit)
+    statement = (
+        select(MaintenanceRequest)
+        .order_by(MaintenanceRequest.created_at.desc())
+        .limit(limit)
+    )
     return list(database.scalars(statement))
