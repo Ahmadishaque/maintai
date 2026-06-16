@@ -6,6 +6,69 @@ import streamlit as st
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 REQUESTS_URL = f"{BACKEND_URL}/api/v1/requests"
 
+
+def render_triage(record: dict[str, object]) -> None:
+    """Render the structured triage result and operational metadata."""
+    data = record.get("structured_data") or {}
+    metadata = record.get("llm_metadata") or {}
+    if not isinstance(data, dict) or not isinstance(metadata, dict):
+        st.json(record)
+        return
+
+    status_value = str(record.get("status", "unknown"))
+    if status_value == "needs_review":
+        st.warning("Human review required")
+    else:
+        st.success("Automated triage completed")
+
+    st.subheader(str(data.get("summary", "Maintenance request")))
+    metric_columns = st.columns(4)
+    metric_columns[0].metric("Category", str(data.get("issue_category", "unknown")))
+    metric_columns[1].metric("Severity", str(data.get("severity", "unknown")))
+    metric_columns[2].metric("Equipment", str(data.get("equipment_type") or "unknown"))
+    confidence = data.get("confidence")
+    confidence_label = f"{float(confidence):.0%}" if isinstance(confidence, int | float) else "n/a"
+    metric_columns[3].metric("Confidence", confidence_label)
+
+    left_column, right_column = st.columns(2)
+    with left_column:
+        st.markdown("#### Observed symptoms")
+        symptoms = data.get("symptoms") or []
+        if symptoms:
+            for symptom in symptoms:
+                st.write(f"- {symptom}")
+        else:
+            st.write("No symptoms extracted.")
+
+        st.markdown("#### Recommended actions")
+        actions = data.get("recommended_actions") or []
+        if actions:
+            for action in actions:
+                st.write(f"- {action}")
+        else:
+            st.write("Await human review.")
+
+    with right_column:
+        st.markdown("#### Missing information")
+        missing = data.get("missing_information") or []
+        if missing:
+            for item in missing:
+                st.write(f"- {item}")
+        else:
+            st.write("No critical gaps identified.")
+
+        st.markdown("#### Policy evidence")
+        citations = data.get("policy_citations") or []
+        if citations:
+            for citation in citations:
+                st.code(str(citation))
+        else:
+            st.write("No validated policy citation was returned.")
+
+    with st.expander("LLM usage and audit metadata"):
+        st.json(metadata)
+
+
 st.set_page_config(page_title="MaintAI", page_icon="🛠️", layout="wide")
 st.title("MaintAI")
 st.caption("Policy-grounded maintenance intake assistant")
@@ -16,33 +79,35 @@ with st.sidebar:
         try:
             response = requests.get(f"{BACKEND_URL}/health", timeout=5)
             response.raise_for_status()
-            health = response.json()
-            st.success("Backend is healthy.")
-            st.json(health)
+            st.success("Backend and database are healthy.")
+            st.json(response.json())
         except requests.RequestException as exc:
             st.error(f"Could not reach the backend: {exc}")
+
+    st.divider()
+    st.caption("One Gemini call performs structured extraction and policy-grounded triage.")
 
 new_request_tab, history_tab = st.tabs(["New request", "Request history"])
 
 with new_request_tab:
     st.subheader("Describe the maintenance issue")
     st.write(
-        "Enter the issue in natural language. This milestone stores the original request; "
-        "the next milestone will add Gemini-based structured extraction."
+        "MaintAI retrieves relevant internal procedures, calls Gemini for schema-constrained "
+        "extraction, validates citations, and stores the complete audit record in PostgreSQL."
     )
 
     with st.form("maintenance_request_form", clear_on_submit=True):
         reporter_name = st.text_input("Reporter name", placeholder="Jordan Lee")
-        location = st.text_input("Location", placeholder="Building 3, second floor")
+        location = st.text_input("Location", placeholder="Building 3, mechanical room")
         raw_description = st.text_area(
             "Issue description",
             height=180,
             placeholder=(
-                "The air-conditioning unit is making a grinding noise and water is pooling "
-                "underneath it. The issue started this morning."
+                "The cooling pump is vibrating heavily and leaking dark fluid near the rear "
+                "seal. The issue started this morning."
             ),
         )
-        submitted = st.form_submit_button("Create maintenance request", use_container_width=True)
+        submitted = st.form_submit_button("Analyze and create request", use_container_width=True)
 
     if submitted:
         payload = {
@@ -51,13 +116,17 @@ with new_request_tab:
             "location": location or None,
         }
         try:
-            response = requests.post(REQUESTS_URL, json=payload, timeout=10)
+            with st.spinner("Retrieving policies and analyzing the request..."):
+                response = requests.post(REQUESTS_URL, json=payload, timeout=60)
             response.raise_for_status()
             request_record = response.json()
             st.success(f"Request #{request_record['id']} was created.")
-            st.json(request_record)
+            render_triage(request_record)
         except requests.HTTPError:
-            detail = response.json().get("detail", response.text)
+            try:
+                detail = response.json().get("detail", response.text)
+            except ValueError:
+                detail = response.text
             st.error(f"The request could not be created: {detail}")
         except requests.RequestException as exc:
             st.error(f"Could not reach the backend: {exc}")
@@ -77,10 +146,10 @@ with history_tab:
                         f"Request #{record['id']} · {record['status']} · "
                         f"{record.get('location') or 'Location not provided'}"
                     ):
-                        st.write(record["raw_description"])
                         st.caption(
                             f"Reporter: {record.get('reporter_name') or 'Not provided'} | "
                             f"Created: {record['created_at']}"
                         )
+                        render_triage(record)
         except requests.RequestException as exc:
             st.error(f"Could not load request history: {exc}")
