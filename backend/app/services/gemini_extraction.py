@@ -72,12 +72,17 @@ Retrieved internal policies:
         raise GeminiServiceError("Gemini extraction request failed.") from exc
 
     latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
-    if isinstance(response.parsed, MaintenanceExtraction):
-        extraction = response.parsed
-    elif response.text:
-        extraction = MaintenanceExtraction.model_validate_json(response.text)
-    else:
-        raise GeminiServiceError("Gemini returned no structured output.")
+    try:
+        if isinstance(response.parsed, MaintenanceExtraction):
+            extraction = response.parsed
+        elif response.parsed is not None:
+            extraction = MaintenanceExtraction.model_validate(response.parsed)
+        elif response.text:
+            extraction = MaintenanceExtraction.model_validate_json(response.text)
+        else:
+            raise GeminiServiceError("Gemini returned no structured output.")
+    except (TypeError, ValueError) as exc:
+        raise GeminiServiceError("Gemini returned invalid structured output.") from exc
 
     allowed_citations = {policy.policy_id for policy in policies}
     valid_citations = [
